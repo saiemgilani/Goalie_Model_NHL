@@ -1,0 +1,235 @@
+column,use,definition
+shotID,drop,Unique id for each shot
+homeTeamCode,drop,"The home team in the game. For example: TOR, MTL, NYR, etc"
+awayTeamCode,drop,The away team in the game
+season,stratify,Season the shot took place in. Example: 2009 for the 2009-2010 season
+isPlayoffGame,,"Set to 1 if a playoff game, otherwise 0"
+game_id,drop,The NHL Game_id of the game the shot took place in
+homeTeamWon,drop,Set to 1 if the home team won the game. Otherwise 0.
+id,drop,The event # of the shot in the game
+time,drop,Seconds into the game of the shot
+timeUntilNextEvent,drop,Time between the shot and the next event that happens in the game after the shot
+timeSinceLastEvent,drop,Time between the shot and the event that took place before the shot
+period,drop,Period of the game
+team,drop,The team taking the shot. HOME or AWAY
+location,drop,"The zone the shot took place in. HOMEZONE, AWAYZONE, or Neu. Zone"
+event,drop,"Whether the shot was a shot on goal (SHOT), goal, (GOAL), or missed the net (MISS)"
+goal,target,Set to 1 if shot was a goal. Otherwise 0
+shotPlayContinuedOutsideZone,drop,"Set to 1 if play continued after the shot. (not a goal, goalie stop, or out of play), but the next event was outside of the attacking zone. Otherwise 0."
+shotPlayContinuedInZone,drop,"Set to 1 if play continued after the shot. (not a goal, goalie stop, or out of play) and the next event was inside the attacking zone. Otherwise 0."
+shotGoalieFroze,drop,Set to 1 if the goalie froze the puck within 1 second of the shot. Otherwise 0
+shotPlayStopped,drop,"Set to 1 if the play stopped after the shot for a reason beyond a goalie freeze. (Puck went outside the playing surface, dislodged net, etc). Otherwise 0"
+shotGeneratedRebound,drop,Set to 1 if the shot generated a rebound shot within 3 seconds of the this shot.
+homeTeamGoals,drop,Home team goals before the shot took place
+awayTeamGoals,drop,Away team goals before the shot took palce
+xCord,drop,"The X coordinate ""North South"" on the ice of the shot. Feet from red line.  -89 and 89 are the goal lines at each of the rink"
+yCord,drop,"The Y coordinate  ""East West"" on the ice of the shot. The middle of the ice has a y-coordinate of 0"
+xCordAdjusted,scale,Adjusts the x coordinate as if all shots were at the right end of the rink. Usually makes the coordinate a positive number
+yCordAdjusted,scale,Adjusts the y coordinate as if all shots were at the right end of the rink.
+shotAngle,drop,The angle of the shot in degrees. Is a positive number if the shot is from the left side of the ice.
+shotAngleAdjusted,scale,The absolute value of the shot angle
+shotAnglePlusRebound,scale,The difference in angle between the previous shot and this shot if this shot is a rebound. Is otherwise set to 0
+shotAngleReboundRoyalRoad,,Set to 1 if the puck went through the middle of the between this shot and previous shot if this shot is a rebound.
+shotDistance,scale,"The distance from the net of the shot in feet. Net is defined as being at the (89,0) coordinates"
+shotType,cat_idx,"Type of the shot. (Slap, Wrist, etc)"
+shotOnEmptyNet,drop,Set to 1 if the shot was on an empty net. Otherwise 0.
+shotRebound,,Set to 1 if the shot is a rebound. (If the last event was a shot and within 3 seconds of this shot)
+shotAnglePlusReboundSpeed,scale,The shotAnglePlusRebound variable divded by time between the last shot and this one. (How fast the angle changed)
+shotRush,,Set to 1 if the shot was on a rush. (If the last event was in another zone and within 4 seconds)
+speedFromLastEvent,scale,The distance between the shot location and the previous event's location divded by the number of seconds between them
+lastEventxCord,drop,The x coorinate of the last event before the shot
+lastEventyCord,drop,The y coorinate of the last event before the shot
+distanceFromLastEvent,drop,The distance between the shot location and the previous event's location in feet
+lastEventShotAngle,scale,The shot angle of the shot directly before this shot. (If the last event was a shot)
+lastEventShotDistance,scale,The shot distance of the shot directly before this shot. (If the last event was a shot)
+lastEventCategory,drop,"The type of event before the shot.Shot, hit, etc. "
+lastEventTeam,drop,The team that did the last event. HOME or AWAY. If last event was a faceoff is the team that won the faceoff
+homeEmptyNet,drop,Whether the home team's net is empty at the time of the shot
+awayEmptyNet,drop,Whether the away team's net is empty at the time of the shot
+homeSkatersOnIce,drop,The number of skaters on the ice for the home team. Does not count the goalie
+awaySkatersOnIce,drop,The number of skaters on the ice for the away team. Does not count the goalie
+awayPenalty1TimeLeft,drop,The number of seconds left in the penalty on the away team. If the penalty that will expire first if multiple penalities
+awayPenalty1Length,drop,The total length in seconds of the penalty on the away team. Is the penalty that will expire first if multiple penalities on the away team
+homePenalty1TimeLeft,drop,The number of seconds left in the penalty on the home team. If the penalty that will expire first if multiple penalities
+homePenalty1Length,drop,The total length in seconds of the penalty on the home team. Is the penalty that will expire first if multiple penalities on the home team
+playerPositionThatDidEvent,drop,"The position of the player doing the shot. L for Left Wing, R for Right Wing, D for Defenceman, C for Centre."
+playerNumThatDidEvent,drop,The jersey number of the player that took the shot
+playerNumThatDidLastEvent,drop,The jersey number of the player that did the last event before the shot. Only populated if the previous event is a shot attempt. Otherwise 0.
+lastEventxCord_adjusted,drop,Adjusts the last event's x coordinate similar to the other adjusted coordinate variables
+lastEventyCord_adjusted,drop,Adjusts the last event's y coordinate similar to the other adjusted coordinate variables
+timeSinceFaceoff,drop,Seconds since there has been a faceoff at the time of the shot
+goalieIdForShot,drop,The NHL player id for the goalie the shot is on.
+goalieNameForShot,drop,The First and Last name of the goalie the shot is on.
+shooterPlayerId,drop,The NHL player id of the skater taking the shot
+shooterName,drop,The First and Last name of the player taking the shot
+shooterLeftRight,cat_idx,Whether the shooter is a left or right shot. L/R
+shooterTimeOnIce,scale,playing time in seconds that have passed since the shooter started their shift
+shooterTimeOnIceSinceFaceoff,scale,The minimum of the  playing time in seconds since the last faceoff and the playing time that has passed since the shooter started their shift
+shootingTeamForwardsOnIce,scale,Number of forwards the shooting team has on the ice
+shootingTeamDefencemenOnIce,scale,Number of defencemen the shooting team has on the ice
+shootingTeamAverageTimeOnIce,scale,The average playing time in seconds the shooting team's players have been on the ice
+shootingTeamAverageTimeOnIceOfForwards,scale,The average playing time in seconds the shooting team's forwards have been on the ice
+shootingTeamAverageTimeOnIceOfDefencemen,scale,The average playing time in seconds the shooting team's defencemen have been on the ice
+shootingTeamMaxTimeOnIce,scale,The maximum playing time in seconds the shooting team's players have been on the ice
+shootingTeamMaxTimeOnIceOfForwards,scale,The maximum playing time in seconds the shooting team's forwards have been on the ice
+shootingTeamMaxTimeOnIceOfDefencemen,scale,The maximum playing time in seconds the shooting team's defencemen have been on the ice
+shootingTeamMinTimeOnIce,scale,The minimum playing time in seconds the shooting team's players have been on the ice
+shootingTeamMinTimeOnIceOfForwards,scale,The minimum playing time in seconds the shooting team's forwards have been on the ice
+shootingTeamMinTimeOnIceOfDefencemen,scale,The minimum playing time in seconds the shooting team's defencemen have been on the ice
+shootingTeamAverageTimeOnIceSinceFaceoff,scale,Same as equivalent variable above but only counting seconds since the faceoff if the player was on the ice before the faceoff
+shootingTeamAverageTimeOnIceOfForwardsSinceFaceoff,scale,Same as equivalent variable above but only counting seconds since the faceoff if the player was on the ice before the faceoff
+shootingTeamAverageTimeOnIceOfDefencemenSinceFaceoff,scale,Same as equivalent variable above but only counting seconds since the faceoff if the player was on the ice before the faceoff
+shootingTeamMaxTimeOnIceSinceFaceoff,scale,Same as equivalent variable above but only counting seconds since the faceoff if the player was on the ice before the faceoff
+shootingTeamMaxTimeOnIceOfForwardsSinceFaceoff,scale,Same as equivalent variable above but only counting seconds since the faceoff if the player was on the ice before the faceoff
+shootingTeamMaxTimeOnIceOfDefencemenSinceFaceoff,scale,Same as equivalent variable above but only counting seconds since the faceoff if the player was on the ice before the faceoff
+shootingTeamMinTimeOnIceSinceFaceoff,scale,Same as equivalent variable above but only counting seconds since the faceoff if the player was on the ice before the faceoff
+shootingTeamMinTimeOnIceOfForwardsSinceFaceoff,scale,Same as equivalent variable above but only counting seconds since the faceoff if the player was on the ice before the faceoff
+shootingTeamMinTimeOnIceOfDefencemenSinceFaceoff,scale,Same as equivalent variable above but only counting seconds since the faceoff if the player was on the ice before the faceoff
+defendingTeamForwardsOnIce,scale,Number of forwards the defending team has on the ice
+defendingTeamDefencemenOnIce,scale,Number of defencemen the defending team has on the ice
+defendingTeamAverageTimeOnIce,scale,The average playing time in seconds the shooting team's players have been on the ice
+defendingTeamAverageTimeOnIceOfForwards,scale,The average playing time in seconds the shooting team's forwards have been on the ice
+defendingTeamAverageTimeOnIceOfDefencemen,scale,The average playing time in seconds the shooting team's defencemen have been on the ice
+defendingTeamMaxTimeOnIce,scale,The maximum playing time in seconds the shooting team's players have been on the ice
+defendingTeamMaxTimeOnIceOfForwards,scale,The maximum playing time in seconds the shooting team's forwards have been on the ice
+defendingTeamMaxTimeOnIceOfDefencemen,scale,The maximum playing time in seconds the shooting team's defencemen have been on the ice
+defendingTeamMinTimeOnIce,scale,The minimum playing time in seconds the shooting team's players have been on the ice
+defendingTeamMinTimeOnIceOfForwards,scale,The minimum playing time in seconds the shooting team's forwards have been on the ice
+defendingTeamMinTimeOnIceOfDefencemen,scale,The minimum playing time in seconds the shooting team's defencemen have been on the ice
+defendingTeamAverageTimeOnIceSinceFaceoff,scale,Same as equivalent variable above but only counting seconds since the faceoff if the player was on the ice before the faceoff
+defendingTeamAverageTimeOnIceOfForwardsSinceFaceoff,scale,Same as equivalent variable above but only counting seconds since the faceoff if the player was on the ice before the faceoff
+defendingTeamAverageTimeOnIceOfDefencemenSinceFaceoff,scale,Same as equivalent variable above but only counting seconds since the faceoff if the player was on the ice before the faceoff
+defendingTeamMaxTimeOnIceSinceFaceoff,scale,Same as equivalent variable above but only counting seconds since the faceoff if the player was on the ice before the faceoff
+defendingTeamMaxTimeOnIceOfForwardsSinceFaceoff,scale,Same as equivalent variable above but only counting seconds since the faceoff if the player was on the ice before the faceoff
+defendingTeamMaxTimeOnIceOfDefencemenSinceFaceoff,scale,Same as equivalent variable above but only counting seconds since the faceoff if the player was on the ice before the faceoff
+defendingTeamMinTimeOnIceSinceFaceoff,scale,Same as equivalent variable above but only counting seconds since the faceoff if the player was on the ice before the faceoff
+defendingTeamMinTimeOnIceOfForwardsSinceFaceoff,scale,Same as equivalent variable above but only counting seconds since the faceoff if the player was on the ice before the faceoff
+defendingTeamMinTimeOnIceOfDefencemenSinceFaceoff,scale,Same as equivalent variable above but only counting seconds since the faceoff if the player was on the ice before the faceoff
+offWing,,"Set to 1 if the shot is from the left side of the ice and the shooter is a right shot, or vice-versa. Otherwise 0"
+arenaAdjustedShotDistance,scale,The shot distance adjusted for arena recording bias. Uses the same methodology as War On Ice proposed by Schuckers and Curro. blog.war-on-ice.com/
+arenaAdjustedXCord,scale,The x coordinate of the arena adjusted shot location. Always a positive number
+arenaAdjustedYCord,scale,The y coordinate of the arena adjusted shot location
+arenaAdjustedYCordAbs,scale,The absolute value of the arena adjusted y coordinate
+oneSdArenaAdjustedXCord,drop,
+oneSdArenaAdjustedYCord,drop,
+timeDifferenceSinceChange,scale,The shooting team's minimum time on ice of any player minus the defending team's minimum time on ice of any player
+averageRestDifference,scale,The shooting team's average time on ice since a faceoff minus the defending team's average time on ice since a faceoff
+xGoal,drop,"The probability the shot will be a goal. Also known as ""Expected Goals"""
+xFroze,drop,The probability the goalie will freeze the puck and their will be a stoppage of play within 1 second of the shot
+xRebound,drop,The probability there will be another shot within 3 seconds of this shot occuring
+xPlayContinuedInZone,drop,The probability that the play will continue in the zone after the shot. Defined as the next event after the shot also occuring in the offensive zone and no player changes occuring. Does not include the xRebound probability
+xPlayContinuedOutsideZone,drop,The probability that the play leaves the zone after the shot.
+xPlayStopped,drop,"The probability the play stops after the shot for a reason other than a goal or goalie freezing the puck. For example, the puck is shot into the netting or the net is dislodged, etc."
+xShotWasOnGoal,drop,The probability the shot was on net. (Either a goal or a goalie save)
+isHomeTeam,drop,Set to 1 if the shooting team is the home team
+shotWasOnGoal,drop,Set to 1 if the shot was on net. (Either a goal or a goalie save)
+teamCode,drop,"The team code of the shooting team. For example, TOR, NYR, etc"
+arenaAdjustedXCordABS,drop,Absolute value of the arenaAdjustedXCord
+homeTeamID,drop,
+awayTeamID,drop,
+teamID,drop,
+locationID,drop,
+eventID,drop,
+shotTypeID,drop,
+lastEventCategoryID,drop,
+lastEventTeamID,drop,
+teamCodeID,drop,
+playerPositionThatDidEventID,drop,
+shooterLeftRightID,drop,
+Skater_GP,scale,
+Skater_G,scale,
+Skater_Ast,scale,
+Skater_Pts,scale,
+Skater_Plus_Minus,scale,
+Skater_Pen_In_Min,scale,
+Skater_PShares,scale,
+Skater_EV_G,scale,
+Special_Teams_PP_G,scale,
+Special_Teams_SH_G,scale,
+Skater_GWinners,scale,
+Assists_EV,scale,
+Assists_PP,scale,
+Assists_SH,scale,
+Skater_Shots,scale,
+BLK,scale,
+HIT,scale,
+FOW,scale,
+FOL,scale,
+S_Pct,scale,
+TOI,scale,
+ATOI,scale,
+FO_Pct,scale,
+Adv_GP,scale,
+Corsi_EV_CF,scale,
+Corsi_EV_CA,scale,
+Corsi_EV_CF_PCT,scale,
+Corsi_EV_CF_PCT_rel,scale,
+Fenwick_EV_FF,scale,
+Fenwick_EV_FA,scale,
+Fenwick_EV_FF_PCT,scale,
+Fenwick_EV_FF_PCT_rel,scale,
+oiSH_PCT,scale,
+oiSV_PCT,scale,
+PDO,scale,
+oZS_PCT,scale,
+dZS_PCT,scale,
+TOI_60,scale,
+TOI_EV,scale,
+TK,scale,
+GV,scale,
+Exp_PM,scale,
+SAtt,scale,
+Thru_PCT,scale,
+uid,drop,
+ShootingTeamGoals,scale,Number of goals for the shooting team
+DefendingTeamGoals,scale,Number of goals for the defending team
+ScoreDiff,scale,Score differential between shooting and defending team
+ScoreSituation,cat_idx,"Labeled score situation, ex. Up1, down1, even, etc"
+ShootingTeamSkaters,scale,Number of skaters on the shooting team
+DefendingTeamSkaters,scale,Number of skaters on the defending team
+SkaterDiff,scale,Shooting skaters minus defending skaters
+situation,cat_idx,"Labeled situation, ex. 5on5, 5on4, etc"
+coarseSituation,stratify,"Labeled situation coarse, ex. power, even, under"
+Back_dist,scale,Distance for types of shot
+Quick_dist,scale,
+Slap_dist,scale,
+Snap_dist,scale,
+Wrist_dist,scale,
+Dist_angle,scale,Distance time angle
+Rebound_dist,scale,Distance if a rebound shot
+Square_dist,scale,Distance squared
+Square_angle,scale,Angle squared
+Square_all,scale,Multiplication of the above two
+OverallRestDiff,scale,
+Skater_G_rate,scale,
+Skater_Ast_rate,scale,
+Skater_Pts_rate,scale,
+Skater_Plus_Minus_rate,scale,
+Skater_Pen_In_Min_rate,scale,
+Skater_PShares_rate,scale,
+Skater_EV_G_rate,scale,
+Special_Teams_PP_G_rate,scale,
+Special_Teams_SH_G_rate,scale,
+Skater_GWinners_rate,scale,
+Assists_EV_rate,scale,
+Assists_PP_rate,scale,
+Assists_SH_rate,scale,
+Skater_Shots_rate,scale,
+BLK_rate,scale,
+HIT_rate,scale,
+FOW_rate,scale,
+FOL_rate,scale,
+Corsi_EV_CF_rate,scale,
+Corsi_EV_CA_rate,scale,
+Fenwick_EV_FF_rate,scale,
+Fenwick_EV_FA_rate,scale,
+SAtt_rate,scale,
+shTalent,scale,To date shooter talent
+shotsWithin5,scale,shots within X seconds
+shotsWithin10,scale,
+shotsWithin15,scale,
+shotsWithin20,scale,
+shotsWithin30,scale,
+shotsWithin40,scale,
+shotsWithin60,scale,
+Zone,cat_idx,

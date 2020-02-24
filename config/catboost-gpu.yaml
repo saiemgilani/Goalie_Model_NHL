@@ -1,0 +1,40 @@
+model:
+  name: 'catboost'
+  class: 'catboost.CatBoostClassifier'
+  cat_property: 'cat_features'
+  classifier:
+      verbose: 500
+      task_type: 'GPU'
+      loss_function: 'Logloss'
+      random_seed: 99
+  feature_selection:
+    sample:
+      size: 15000
+      seed: 99
+    classifier:
+      iterations: 5000
+      learning_rate: 0.001
+      depth: 5
+    threshold: 0.15
+  hyperparameter_tuning:
+    sample:
+      size: 100000
+      seed: 99
+    grid:
+      scoring: 'neg_log_loss'
+      cv: 5
+      params:
+        iterations: [5000, 7000]
+        learning_rate: [0.001]
+        depth: [5, 7]
+  clustering:
+    pca:
+      n_components: 8
+    gaussian:
+      n_components: 5
+      random_state: 0
+data:
+  config_path: './goalcred/config/data/default-cat.csv'
+  test_split: 0.15
+  scale:
+    class: 'sklearn.preprocessing.StandardScaler'

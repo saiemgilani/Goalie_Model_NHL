@@ -1,0 +1,21 @@
+talos:
+  name: 'default'
+  model_fn: 'model.talos_mlp'
+  fraction_limit: 1.0
+  params:
+    first_neuron: [48, 96]
+    hidden_layers: [2, 3]
+    last_neuron: [24]
+    batch_size: [2048]
+    epochs: [40]
+    dropout: [0.5]
+    optimizer: ['adam']
+    losses: ['binary_crossentropy']
+    activation: ['relu']
+    last_activation: ['sigmoid']
+    shapes: ['brick']
+data:
+  config_path: './goalcred/config/data/default.csv'
+  test_split: 0.25
+  scale:
+    class: 'sklearn.preprocessing.StandardScaler'

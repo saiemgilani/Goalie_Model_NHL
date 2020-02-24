@@ -1,0 +1,44 @@
+model:
+  name: 'xgboost'
+  class: 'xgboost.XGBClassifier'
+  classifier:
+      objective: 'binary:logistic'
+      seed: 99
+      tree_method: 'gpu_hist'
+      n_gpus: 1
+      max_bin: 16
+  feature_selection:
+    sample:
+      size: 15000
+      seed: 99
+    classifier:
+      min_child_weight: 50
+      n_estimators: 7500
+      learning_rate: 0.001
+      subsample: 0.8
+      max_depth: 7
+    threshold: 0.006
+  hyperparameter_tuning:
+    sample:
+      size: 100000
+      seed: 99
+    grid:
+      scoring: 'neg_log_loss'
+      cv: 5
+      params:
+        min_child_weight: [10, 50, 100]
+        n_estimators: [3500, 5000, 7500]
+        learning_rate: [0.001]
+        subsample: [0.5]
+        max_depth: [4, 5, 6, 7, 8]
+  clustering:
+    pca:
+      n_components: 8
+    gaussian:
+      n_components: 5
+      random_state: 0
+data:
+  config_path: './goalcred/config/data/default.csv'
+  test_split: 0.15
+  scale:
+    class: 'sklearn.preprocessing.StandardScaler'

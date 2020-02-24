@@ -1,0 +1,577 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+import libraries
+```{r}
+library(dplyr)
+library(data.table)
+library(readxl)
+```
+
+
+```{r}
+
+
+cdf <- read.table(file = "C:/Users/bhale/OneDrive/Documents/DVA/Group Project/goalie cdf.csv",
+                   sep = ',',
+                   header = TRUE)
+
+
+sim <- read.table(file = "C:/Users/bhale/OneDrive/Documents/DVA/Group Project/sim_dbf.csv",
+                   sep = ',',
+                   header = TRUE)
+
+gradeByGame <- read.table(file = "C:/Users/bhale/OneDrive/Documents/DVA/Group Project/goalie grade by game.csv",
+                   sep = ',',
+                   header = TRUE)
+
+
+
+```
+
+
+max games each goalie has played
+```{r}
+maxGames <- gradeByGame %>%
+  group_by(goalie_id) %>%
+  summarize("max_games" = max(game_in_career)) %>%
+  merge(gNames,
+        by.x = "goalie_id",
+        by.y = "goalieIdForShot")
+
+```
+
+create table of goalie names and goalie id
+```{r}
+goalieName <- shotsFull %>%
+  select(goalieNameForShot,goalieIdForShot) %>%
+  unique
+
+
+write.csv(goalieName,
+          "C:/Users/bhale/OneDrive/Documents/DVA/Group Project/goalieIdNames.csv")
+
+```
+
+
+goalies grade by game
+```{r}
+
+goalieGradeByGameFinal <- sim %>%
+    group_by(goalie_id) %>%
+    arrange(game_in_career) %>%
+    mutate(diff = actual_goals - lag(actual_goals, default = first(actual_goals)),
+           diff = ifelse(game_in_career == 1, actual_goals, diff)) %>%
+  rename("Cumulative_Goals" = actual_goals,
+         "Actual_Goals" = diff) %>% 
+  arrange(goalie_id,game_in_career) %>%
+  data.table()
+
+write.csv(cdfFinal,
+          "C:/Users/bhale/OneDrive/Documents/DVA/Group Project/goalieGradeByGameFinal.csv")
+```
+
+
+createeach goalies CDF
+
+```{r}
+cdfFinal <- cdf %>%
+  merge(goalieGradeByGameFinal[,c("goalie_id","game_in_career","Actual_Goals")],
+        by = c("goalie_id","game_in_career")
+        ) %>%
+  select(-X)
+
+write.csv(cdfFinal,
+          "C:/Users/bhale/OneDrive/Documents/DVA/Group Project/cdfFinal.csv")
+```
+
+
+
+create shots file to input into tableau
+```{r}
+shotsFull <- read.table(file = "C:/Users/bhale/OneDrive/Documents/DVA/Group Project/shots_2007-2018_stats_processed.csv",
+                   sep = ',',
+                   header = TRUE,
+                   nrows = 100)
+
+
+shotsPart <-
+  shotsFull %>%
+  select(goalieIdForShot,
+         goalieNameForShot,
+         shotID,
+         event,
+         shotType,
+         season,
+         isPlayoffGame,
+         goal,
+         yCordAdjusted,
+         xCordAdjusted,
+         shotType,
+         shotRebound
+         ) %>%
+  mutate("goal_expectation" = rnorm(nrow(shotsFull),.6,.1),
+         "yCordAdjusted" = yCordAdjusted +43,
+         "xCordAdjusted" = 99 - xCordAdjusted, 
+         "region" = mapply(hockeyZone,xCordAdjusted,yCordAdjusted))
+
+regionSavePercentage <- 
+shotsPart %>%
+  group_by(region) %>%
+  summarize("goals" = sum(goal),
+            "shots" = n(),
+            "regionSavePercentage" = (shots-goals)/shots)
+
+shotsUse <- shotsPart %>%
+  merge(regionSavePercentage,
+        by = "region")
+
+
+write.csv(shotsUse,
+          "C:/Users/bhale/OneDrive/Documents/DVA/Group Project/shotsUse.csv",
+          row.names = FALSE)
+
+```
+
+
+
+
+results of simulation for input into Tableau
+perform file mergers in here. tableau wont create an extract
+USED THIS FOR FINAL
+```{r}
+goalieCDF  <- read.table(file = "C:/Users/bhale/OneDrive/Documents/DVA/Group Project/sim_cdf_dbf(2).csv",
+                   sep = ',',
+                   header = TRUE) #used to be goalie cdf.csv
+
+
+
+ggbg <- read.table(file = "C:/Users/bhale/OneDrive/Documents/DVA/Group Project/sim_dbf  final.csv",
+                   sep = ',',
+                   header = TRUE) %>% #used to be goalie grade by game
+  data.table()
+gNames <- read.table(file = "C:/Users/bhale/OneDrive/Documents/DVA/Group Project/goalieIdNames.csv",
+                   sep = ',',
+                   header = TRUE)
+
+
+goalieCDFUse <- goalieCDF %>%
+  merge(ggbg[,c("goalie_id","game_in_career","actual_goals")],
+        by = c("goalie_id","game_in_career")) %>%
+  merge(gNames,
+        by.x = "goalie_id",
+        by.y = "goalieIdForShot") %>%
+  filter(goalieNameForShot != "")
+
+
+write.csv(goalieCDFUse,"C:/Users/bhale/OneDrive/Documents/DVA/Group Project/goalieCDFPreJoinedUseFinal.csv",
+          row.names = FALSE)
+
+```
+
+
+
+
+create file that compares players who were rookies at the start
+to other players who were rookies at the start
+```{r}
+
+
+
+start <- Sys.time()
+
+rookieFile <- read_excel("C:/Users/bhale/OneDrive/Documents/DVA/Group Project/sim_analysis.xlsx",
+                         sheet = "Rookies",
+                         col_names = c("goalie_id","goalieName","startYr"))
+
+
+gradeByGame <- read.table(file = "C:/Users/bhale/OneDrive/Documents/DVA/Group Project/sim_dbf  final.csv",
+                   sep = ',',
+                   header = TRUE) %>%
+  filter(goalie_id %in% rookieFile$goalie_id)
+
+
+
+gradeShort <- gradeByGame %>% 
+  filter(goalie_id != 0)
+
+goalies <- unique(gradeShort$goalie_id)
+
+proximity <-temp %>% 
+  mutate("closeRank" =  row_number()) %>% 
+  slice (0:0) 
+
+#seq(0,nrow(gradeShort)
+for (row in seq(1,nrow(gradeShort))) {
+  
+  goalie <- gradeShort[row,]$goalie_id
+  
+  numGame <- gradeShort[row,]$game_in_career
+
+  score <- gradeShort[row,]$cdf_score
+  
+  temp <- gradeShort %>%
+    filter(goalie_id != goalie,
+           game_in_career == numGame) %>%
+    mutate("score_difference" = abs(cdf_score -score ),
+           "originalGoalie" = goalie,
+           "isOriginal" = FALSE) %>%
+    arrange((score_difference)) %>%
+    slice(1:10) %>%
+    mutate("closeRank" =  row_number()) %>%
+    rename("similarGoalie" = goalie_id) %>%
+    select(originalGoalie,similarGoalie,game_in_career,isOriginal,closeRank)
+
+  x <- data.frame(originalGoalie = goalie,similarGoalie =goalie,game_in_career =numGame,isOriginal=TRUE,closeRank = 0)  
+  
+  temp <- temp %>%
+    rbind(x)
+  
+    proximity <- proximity %>%
+      rbind(temp)
+
+  
+}
+
+
+end <- Sys.time()
+
+similarAtRookie <- proximity
+print(end-start)
+```
+
+
+```{r}
+
+
+
+write.csv(similarAtRookie,"C:/Users/bhale/OneDrive/Documents/DVA/Group Project/proximityRookie.csv",
+          row.names = FALSE)
+
+```
+
+
+table of goalies who's first game is captured in our dataset
+```{r}
+rookieFile <- read_excel("C:/Users/bhale/OneDrive/Documents/DVA/Group Project/sim_analysis.xlsx",
+                         sheet = "Rookies",
+                         col_names = c("goalie_id","goalieName","startYr"))
+```
+
+
+create file that compares players who were not rookies at the start
+to every oneother players who were rookies at the start
+
+```{r}
+
+start <- Sys.time()
+
+
+
+
+gradeByGame <- read.table(file = "C:/Users/bhale/OneDrive/Documents/DVA/Group Project/sim_dbf  final.csv",
+                   sep = ',',
+                   header = TRUE) 
+
+nonRookie <- gradeByGame %>%
+  filter(!(goalie_id  %in% rookieFile$goalie_id))  
+
+gradeShort <- gradeByGame %>% 
+  filter(goalie_id != 0)
+
+goalies <- unique(gradeShort$goalie_id)
+
+proximity <-temp %>% 
+  mutate("closeRank" =  row_number()) %>% 
+  slice (0:0) 
+
+#seq(0,nrow(gradeShort)
+for (row in seq(1,nrow(nonRookie))) {
+  
+  goalie <- nonRookie[row,]$goalie_id
+  
+  numGame <- nonRookie[row,]$game_in_career
+
+  score <- nonRookie[row,]$cdf_score
+  
+  temp <- gradeShort %>%
+    filter(goalie_id != goalie,
+           game_in_career == numGame) %>%
+    mutate("score_difference" = abs(cdf_score -score ),
+           "originalGoalie" = goalie,
+           "isOriginal" = FALSE) %>%
+    arrange((score_difference)) %>%
+    slice(1:10) %>%
+    mutate("closeRank" =  row_number()) %>%
+    rename("similarGoalie" = goalie_id) %>%
+    select(originalGoalie,similarGoalie,game_in_career,isOriginal,closeRank)
+
+  x <- data.frame(originalGoalie = goalie,similarGoalie =goalie,game_in_career =numGame,isOriginal=TRUE,closeRank = 0)  
+  
+  temp <- temp %>%
+    rbind(x)
+  
+    proximity <- proximity %>%
+      rbind(temp)
+
+  
+}
+
+
+end <- Sys.time()
+
+print(end-start)
+```
+
+
+
+```{r}
+write.csv(proximity,"C:/Users/bhale/OneDrive/Documents/DVA/Group Project/proximityNonRookie.csv",
+          row.names = FALSE)
+
+```
+
+
+
+
+create file that compares players who were rookies at the start
+up to comparison
+to other players who were rookies at the start
+
+```{r}
+gradeByGame <- read.table(file = "C:/Users/bhale/OneDrive/Documents/DVA/Group Project/sim_dbf  final.csv",
+                 sep = ',',
+                 header = TRUE)
+
+start = Sys.time()
+
+maxGames <- gradeByGame %>%
+  group_by(goalie_id) %>%
+  summarize("max_games" = max(game_in_career)) 
+
+gradeShort <- gradeByGame %>% 
+  filter(goalie_id != 0,
+         goalie_id %in% rookieFile$goalie_id) %>%
+  merge(maxGames,
+        by = "goalie_id") #%>%
+  #filter(goalie_id %in% c(8476899,8470860))
+
+
+proximity2 <-temp %>% 
+  mutate("closeRank" =  row_number()) %>% 
+  slice (0:0) 
+
+#seq(0,nrow(gradeShort)
+for (row in seq(1,nrow(gradeShort))) {
+  
+  #row = 4 
+
+  goalie <- gradeShort[row,]$goalie_id
+  
+  numGame <- gradeShort[row,]$game_in_career
+
+  score <- gradeShort[row,]$cdf_score
+  
+  origGoalie <- gradeShort %>%
+    filter(goalie_id == goalie,
+           game_in_career <= numGame) %>%
+    select(goalie_id,game_in_career,cdf_score) %>%
+    rename("orig_score" = cdf_score,
+           "orig_goalie" = goalie_id)
+  
+  temp <- gradeShort %>%
+    filter(goalie_id != goalie,
+           game_in_career <= numGame,
+           max_games >= numGame) %>%
+    merge(origGoalie,
+          by = "game_in_career") %>%
+    mutate("diff" = (orig_score-cdf_score)^2) %>%
+    group_by(goalie_id) %>%
+    summarize("diff" = sum(diff)) %>%
+    arrange(diff) %>%
+    slice(1:10) %>%
+    mutate("closeRank" =  row_number())  %>%
+    rbind(data.frame("goalie_id" = goalie,"diff" = 0, "closeRank" = 0)) %>%
+    cbind(data.frame("originalGoalie" = goalie)) %>%
+    cbind(data.frame("game" = numGame)) %>%
+    rename("similarGolaie" = "goalie_id",
+           "difference" = "diff")
+    
+   
+  proximity2 <- proximity2 %>%
+      rbind(temp)
+
+  
+}
+
+end = Sys.time()
+
+print(end-start)
+
+
+```
+
+```{r}
+sumSquareRookie <- proximity2
+
+write.csv(sumSquareRookie,"C:/Users/bhale/OneDrive/Documents/DVA/Group Project/sumSquareRookie.csv",
+          row.names = FALSE)
+
+```
+
+
+
+
+create file that compares players who were not rookies at the start
+to everyone
+up to comparison
+
+```{r}
+gradeByGame <- read.table(file = "C:/Users/bhale/OneDrive/Documents/DVA/Group Project/sim_dbf  final.csv",
+                 sep = ',',
+                 header = TRUE)
+
+start = Sys.time()
+
+maxGames <- gradeByGame %>%
+  group_by(goalie_id) %>%
+  summarize("max_games" = max(game_in_career)) 
+
+gradeShort <- gradeByGame %>% 
+  filter(goalie_id != 0) %>%
+  merge(maxGames,
+        by = "goalie_id") #%>%
+  #filter(goalie_id %in% c(8476899,8470860))
+
+nonRookie <- gradeByGame %>%
+  filter(goalie_id != 0) %>%
+  filter(!(goalie_id  %in% rookieFile$goalie_id))  
+
+proximity2 <-temp %>% 
+  mutate("closeRank" =  row_number()) %>% 
+  slice (0:0) 
+
+#seq(0,nrow(gradeShort)
+for (row in seq(1,nrow(nonRookie))) {
+  
+  #row = 4 
+
+  goalie <- nonRookie[row,]$goalie_id
+  
+  numGame <- nonRookie[row,]$game_in_career
+
+  score <- nonRookie[row,]$cdf_score
+  
+  origGoalie <- gradeShort %>%
+    filter(goalie_id == goalie,
+           game_in_career <= numGame) %>%
+    select(goalie_id,game_in_career,cdf_score) %>%
+    rename("orig_score" = cdf_score,
+           "orig_goalie" = goalie_id)
+  
+  temp <- gradeShort %>%
+    filter(goalie_id != goalie,
+           game_in_career <= numGame,
+           max_games >= numGame) %>%
+    merge(origGoalie,
+          by = "game_in_career") %>%
+    mutate("diff" = (orig_score-cdf_score)^2) %>%
+    group_by(goalie_id) %>%
+    summarize("diff" = sum(diff)) %>%
+    arrange(diff) %>%
+    slice(1:10) %>%
+    mutate("closeRank" =  row_number())  %>%
+    rbind(data.frame("goalie_id" = goalie,"diff" = 0, "closeRank" = 0)) %>%
+    cbind(data.frame("originalGoalie" = goalie)) %>%
+    cbind(data.frame("game" = numGame)) %>%
+    rename("similarGolaie" = "goalie_id",
+           "difference" = "diff")
+    
+   
+  proximity2 <- proximity2 %>%
+      rbind(temp)
+
+  
+}
+
+end = Sys.time()
+
+print(end-start)
+
+
+```
+
+```{r}
+sumSquareVet <- proximity2
+
+write.csv(sumSquareVet,"C:/Users/bhale/OneDrive/Documents/DVA/Group Project/sumSquareVet.csv",
+          row.names = FALSE)
+
+```
+
+
+
+
+made a pdf of simulation results from our cdf
+
+```{r}
+#gradeByGame <- read.table(file = "C:/Users/bhale/OneDrive/Documents/DVA/Group Project/sim_dbf  final.csv",
+#                   sep = ',',
+#                   header = TRUE)
+
+goalieCDF  <- read.table(file = "C:/Users/bhale/OneDrive/Documents/DVA/Group Project/sim_cdf_dbf(2).csv",
+                   sep = ',',
+                   header = TRUE) #used to be goalie cdf.csv
+
+minGame <- goalieCDF %>%
+  group_by(goalie_id,game_in_career) %>%
+  summarize("min_goal" = min(sim_goal_total))
+
+pdf <- goalieCDF %>% 
+  merge(minGame,
+        by = c("goalie_id","game_in_career")) %>%
+    group_by(goalie_id,game_in_career) %>%
+    arrange(sim_goal_total) %>%
+    mutate(pmf = cdf_score - lag(cdf_score, default = first(cdf_score)),
+           pmf = ifelse(sim_goal_total == min_goal, cdf_score, pmf)) %>%
+  arrange(goalie_id,game_in_career) %>%
+  data.table()
+
+
+meanGoals <- pdf %>% 
+  mutate("exp" = pmf*sim_goal_total) %>%
+  group_by(game_in_career,goalie_id) %>%
+  summarize("mean" = sum(exp))
+  
+
+ggbg <- read.table(file = "C:/Users/bhale/OneDrive/Documents/DVA/Group Project/sim_dbf  final.csv",
+                   sep = ',',
+                   header = TRUE) %>% #used to be goalie grade by game
+  data.table()
+
+gNames <- read.table(file = "C:/Users/bhale/OneDrive/Documents/DVA/Group Project/goalieIdNames.csv",
+                   sep = ',',
+                   header = TRUE)
+
+
+goaliePDFUse <- pdf %>%
+  merge(meanGoals,
+        by = c("goalie_id","game_in_career")) %>%
+  merge(ggbg[,c("goalie_id","game_in_career","actual_goals")],
+        by = c("goalie_id","game_in_career")) %>%
+  filter(goalie_id != 0) %>%
+  merge(gNames,
+        by.x = "goalie_id",
+        by.y = "goalieIdForShot") %>%
+  filter(goalieNameForShot != "")
+
+write.csv(goaliePDFUse,"C:/Users/bhale/OneDrive/Documents/DVA/Group Project/goaliePDFUse.csv",
+          row.names = FALSE)
+
+
+```
+
+
+
